@@ -1,0 +1,84 @@
+[ Amazon RDS Databse ]
+First set up the Amazon RDS Database with MySQL as the required database with version 5.7.31 under free tier template
+Set the user and password for the database
+create a new Security Group for the database which will be edited later
+(NOTE: Make sure you launch the database where you are going to launch the EC2 Instance)
+-------------------------------------------------------------------------------------------------------------------------
+
+[ Amazon EC2 Instance ]
+Launched the EC2 instance with the following specificcation:
+AMI : Red Hat Enterprise Linux 8 (HVM), SSD Volume Type — ami-0a9d27a9f4f5c0efc (64-bit x86)
+Instance Type: t2.micro
+subnet: ap-south-1a (same as of the database)
+Name: Wordpress-instance
+Security Group : All traffic from Anywhere
+(NOTE: Those fields not mentioned are left in default value)
+
+After launching the EC2 instance we need to copy the Security Group ID of the instance and then paste in the Source field of the Inbound rule in the security group of the
+AWS RDS Database which was creted at the first place.
+--------------------------------------------------------------------------------------------------------------------------
+
+After the successful launch of the EC2 instance we need to do a SSH into the instacne via putty or from the command prompt vua the command:
+>>>>>>>>>>>>>>>>>>>>>>>>  ssh -l ec2-user -i <key_file>  <public_IP>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+After logging in then switch to root user via:
+>>>>>>>>>>>>>>>>>>>>>>>>  sudo su - <<<<<<<<<<<<<<<<<<<<<
+
+Configuring the epel and remi repo via the command:
+>>>>>>>>>>>>>>>>>>>>>>>>  yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm  <<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>  yum -y install https://rpms.remirepo.net/enterprise/remi-release-8.rpm  <<<<<<<<<<<<<<<<<<<<<
+
+Now install all the required packages:
+
+dnf -y install dnf-utils
+dnf update
+yum install httpd -y
+yum install mysql -y
+yum install php-mysqllnd
+dnf module install php:remi-7.4
+---------------------------------------------------------------------------------------------------------------------------
+
+Now Connect with the RDS database from the EC2 instance via the command:
+>>>>>>>>>>>>>>>>>>>>>>>>  mysql -h <end_point_url_of_databse> -u <username> -p  <<<<<<<<<<<<<<<<<<<<<
+It will prompt for password provide the password which you set for the databse while the creation
+---------------------------------------------------------------------------------------------------------------------------
+
+After successful logging into the MySQL database there will be prompt similar to this:
+mysql>
+
+Now create the database which will be used by the wordpres application via the command:
+create database <name_of_database>;
+
+Check for the creation of the database with the command:
+show databases;
+Now exit the database via command:
+exit;
+---------------------------------------------------------------------------------------------------------------------------
+
+Now download the wordpress application in the /var/www/html folder via the command:
+>>>>>>>>>>>>>>>>>>>>>>>>  curl https://wordpress.org/latest.tar.gz --output wordpress.tar.gz  <<<<<<<<<<<<<<<<<<<<<
+
+untar the file:
+>>>>>>>>>>>>>>>>>>>>>>>>  tar xf wordpress.tar.gz  <<<<<<<<<<<<<<<<<<<<<
+---------------------------------------------------------------------------------------------------------------------------
+
+Change the permission for the folder:
+
+>>>>>>>>>>>>>>>>>>>>>>>>  chown -R apache:apache /var/www/html/worpress  <<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>  chcon -t htt[d_sys_rw_content_t /var/www/html/wordpress -R  <<<<<<<<<<<<<<<<<<<<<
+---------------------------------------------------------------------------------------------------------------------------
+
+Disabling the SELinux:
+>>>>>>>>>>>>>>>>>>>>>>>> setenforce 0 <<<<<<<<<<<<<<<<<<<<<
+---------------------------------------------------------------------------------------------------------------------------
+
+Starting and enabling the httpd service :
+>>>>>>>>>>>>>>>>>>>>>>>>  systemctl enable httpd --now  <<<<<<<<<<<<<<<<<<<<<
+---------------------------------------------------------------------------------------------------------------------------
+
+Now we can use the public IP of the EC2 instance and with the route wordpress 
+Eg: 192.168.43.43/wordpress
+
+Now we need to provide the endpoint URL of the RDS database,.name of the database, username database and password for the user created earlier
+Then the "Run Installation" dialog appears which implies the connection to the database was successful
+Hence task completed...!!!
